@@ -1,141 +1,103 @@
-// including header files
-#include<iostream>
-#include<conio.h>
-#include<fstream>
+#include <iostream>
+#include <fstream>
+#include <algorithm> // for std::all_of
 using namespace std;
 
-//global variables
+// Global variables
 string fname, lname, phone_num;
 
 // Functions
 void addContact();
 void searchContact();
-void self_exit();
-bool check_digits(string);
-bool check_numbers(string);
+void removeContact();
+bool isValidPhoneNumber(const string&);
 
-int main()
-{
-    short int choice;
-    system("cls");
-    system("color 0A");
-    cout << "\n\n\t\t\tContact Management.";
-    cout << "\n\n\t1. Add Contact\n\t2. Search Contact\n\t3. Exit\n\t> ";
-    cin >> choice;
+int main() {
+    int choice;
+    do {
+        system("cls"); // Clear the screen 
+        system("color 0A"); // Change text color 
+        cout << "\n\n\t\tContact Management.";
+        cout << "\n\n\t1. Add Contact\n\t2. Search Contact\n\t3. Remove Contact\n\t4. Exit\n\t> ";
+        cin >> choice;
 
-    switch (choice)
-    {
-    case 1:
-        addContact();
-        break;
-    case 2:
-        searchContact();
-        break;
-    case 3:
-        self_exit();
-        break;
-    default:
-        cout << "\n\n\tInvalid Input !";
-        cout << "\n\tPress Any Key To Continue..";
-    _getch();
-        main();
-    }
+        switch (choice) {
+        case 1: addContact(); break;
+        case 2: searchContact(); break;
+        case 3: removeContact(); break;
+        case 4: cout << "\n\tThank you for using!\n"; exit(0);
+        default: cout << "\n\tInvalid Input! Press any key to continue."; cin.ignore(); cin.get();
+        }
+    } while (choice != 4);
+
     return 0;
 }
 
-void self_exit()
-{
+// Add contact function
+void addContact() {
+    ofstream phoneFile("number.txt", ios::app);
     system("cls");
-    cout << "\n\t\tThank You For Using !";
-    exit(1);
+    cout << "\nEnter First Name: "; cin >> fname;
+    cout << "Enter Last Name: "; cin >> lname;
+    cout << "Enter 10-Digit Phone Number: "; cin >> phone_num;
+
+    if (isValidPhoneNumber(phone_num)) {
+        phoneFile << fname << " " << lname << " " << phone_num << endl;
+        cout << "\nContact Saved Successfully!";
+    }
+    else {
+        cout << "\nInvalid phone number. Please enter a 10-digit number containing only digits.";
+    }
+    phoneFile.close();
+    cout << "\nPress any key to continue."; cin.ignore(); cin.get();
 }
 
-
-void addContact()
-{
-    ofstream phone("number.txt", ios::app);
-    system("cls");
-    cout << "\n\n\tEnter First Name : ";
-    cin >> fname;
-    cout << "\n\tEnter Last Name : ";
-    cin >> lname;
-    cout << "\n\tEnter 10-Digit Phone Number : ";
-    cin >> phone_num;
-
-    if (check_digits(phone_num) == true)
-    {
-        if (check_numbers(phone_num) == true)
-        {
-            if (phone.is_open())
-            {
-                phone << fname << " " << lname << " " << phone_num << endl;
-                cout << "\n\tContact Saved Successfully !";
-            }
-            else
-            {
-                cout << "\n\tError Opening File !";
-            }
-        }
-        else
-        {
-            cout << "\n\tThe Phone Number Must Contain Numbers Only !";
-        }
-    }
-    else
-    {
-        cout << "\n\t A Phone Number Must Contain 10 Digits.";
-    }
-    phone.close();
-}
-
-void searchContact() //search function
-{
+// Search contact function
+void searchContact() {
+    ifstream phoneFile("number.txt");
+    string keyword;
     bool found = false;
-    ifstream myfile("number.txt");
-    string keyword, fname, lname, phone_num;
-    cout << "\n\tEnter Name To Search : ";
-    cin >> keyword;
-    while (myfile >> fname >> lname >> phone_num)
-    {
-        if (keyword == fname || keyword == lname)
-        {
-            system("cls");
-            cout << "\n\n\n\t\tContact details..";
-            cout << "\n\n\tFirst Name : " << fname;
-            cout << "\n\tLast Name : " << lname;
-            cout << "\n\tPhone Number : " << phone_num;
+
+    cout << "\nEnter Name to Search: "; cin >> keyword;
+    while (phoneFile >> fname >> lname >> phone_num) {
+        if (keyword == fname || keyword == lname) {
+            cout << "\nContact Found:\nFirst Name: " << fname << "\nLast Name: " << lname << "\nPhone Number: " << phone_num;
             found = true;
             break;
         }
     }
-    if (!found)
-        cout << "\n\tNo Such Contact Found";
+    if (!found) cout << "\nNo contact found.";
+    phoneFile.close();
+    cout << "\nPress any key to continue."; cin.ignore(); cin.get();
 }
 
+// Remove contact function
+void removeContact() {
+    ifstream phoneFile("number.txt");
+    ofstream tempFile("temp.txt");
+    string keyword;
+    bool found = false;
 
-bool check_digits(string x)
-{
-    if (x.length() == 10)
-        return true;
-    else
-        return false;
-}
-
-bool check_numbers(string x) //track whether all characters in the string are digits
-{
-    bool check = true;
-
-    for (int i = 0; i < x.length(); i++)
-    {
-        if (!(int(x[i]) >= 48 && int(x[i]) <= 57))
-        {
-            check = false;
-            break;
+    cout << "\nEnter Name to Remove: "; cin >> keyword;
+    while (phoneFile >> fname >> lname >> phone_num) {
+        if (keyword == fname || keyword == lname) {
+            cout << "\nContact Removed:\nFirst Name: " << fname << "\nLast Name: " << lname << "\nPhone Number: " << phone_num;
+            found = true;
+        }
+        else {
+            tempFile << fname << " " << lname << " " << phone_num << endl;
         }
     }
+    phoneFile.close();
+    tempFile.close();
+    remove("number.txt");
+    rename("temp.txt", "number.txt");
 
-    if (check == true)
-        return true;
-    if (check == false)
-        return false;
+    if (!found) cout << "\nNo contact found.";
+    cout << "\nPress any key to continue."; cin.ignore(); cin.get();
+}
+
+// Function to validate if the phone number is 10 digits long and contains only digits
+bool isValidPhoneNumber(const string& number) {
+    return number.length() == 10 && all_of(number.begin(), number.end(), ::isdigit);
 }
